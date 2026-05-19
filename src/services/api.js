@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000"
+const API_URL = "https://financebot-rilz.onrender.com"
 
 export async function sendMessage(message, user) {
     const response = await fetch(`${API_URL}/finance/message`, {
