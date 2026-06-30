@@ -1,18 +1,25 @@
 const API_URL = "https://financebot-rilz.onrender.com"
 
-export async function sendMessage(message, user) {
+export async function sendMessage(message, user, parcelas = null) {
+    const body = { message, user }
+
+    if (parcelas) {
+        body.parcelado = true
+        body.totalParcelas = parcelas.totalParcelas
+        body.parcelaAtual = parcelas.parcelaAtual
+    }
+
     const response = await fetch(`${API_URL}/finance/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, user })
-    });
-    const data = await response.text()
-    return data;
+        body: JSON.stringify(body)
+    })
+    return await response.text()
 }
 
 export async function getResumo(user) {
     const response = await fetch(`${API_URL}/finance/resumo/${user}`)
-    return await response.text();
+    return await response.text()
 }
 
 export async function getHistorico(user, params = {}) {
@@ -45,6 +52,12 @@ export async function deleteTransacao(id, user) {
     const response = await fetch(`${API_URL}/finance/transacao/${id}?user=${user}`, {
         method: "DELETE"
     })
-    const data = await response.text()
-    return { ok: response.ok, data }
+    return { ok: response.ok, data: await response.text() }
+}
+
+export async function marcarComoPago(id, user) {
+    const response = await fetch(`${API_URL}/finance/transacao/${id}/pagar?user=${user}`, {
+        method: "PATCH"
+    })
+    return { ok: response.ok, data: await response.text() }
 }

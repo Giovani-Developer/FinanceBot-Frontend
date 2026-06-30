@@ -9,15 +9,34 @@ export default function FinanceForm({ user, onSuccess }) {
     const [resumoText, setResumoText] = useState("")
     const [resumoLoading, setResumoLoading] = useState(false)
 
+    // Parcelas
+    const [parcelado, setParcelado] = useState(false)
+    const [totalParcelas, setTotalParcelas] = useState("")
+    const [parcelaAtual, setParcelaAtual] = useState("1")
+
     async function handleSubmit(e) {
         e.preventDefault()
         if (!message.trim() || !user) return
+
+        if (parcelado && (!totalParcelas || parseInt(totalParcelas) < 2)) {
+            setResponse("Informe o total de parcelas (mínimo 2)")
+            return
+        }
+
         setLoading(true)
         setResponse("")
         try {
-            const result = await sendMessage(message, user)
+            const parcelas = parcelado ? {
+                totalParcelas: parseInt(totalParcelas),
+                parcelaAtual: parseInt(parcelaAtual)
+            } : null
+
+            const result = await sendMessage(message, user, parcelas)
             setResponse(result)
             setMessage("")
+            setParcelado(false)
+            setTotalParcelas("")
+            setParcelaAtual("1")
             onSuccess?.()
         } catch {
             setResponse("Erro ao enviar mensagem")
@@ -58,10 +77,8 @@ export default function FinanceForm({ user, onSuccess }) {
                         </div>
                         {resumoLoading ? (
                             <div className="loading-bars">
-                                <div className="bar" />
-                                <div className="bar" />
-                                <div className="bar" />
-                                <div className="bar" />
+                                <div className="bar" /><div className="bar" />
+                                <div className="bar" /><div className="bar" />
                             </div>
                         ) : (
                             <pre className="resumo-text">{resumoText}</pre>
@@ -83,10 +100,49 @@ export default function FinanceForm({ user, onSuccess }) {
                         {loading ? <span className="spinner">&#x23f3;</span> : "Enviar"}
                     </button>
                 </div>
+
+                {/* Toggle parcelas */}
+                <div className="parcelas-toggle">
+                    <label className="toggle-label">
+                        <input
+                            type="checkbox"
+                            checked={parcelado}
+                            onChange={e => setParcelado(e.target.checked)}
+                        />
+                        <span>É parcelado?</span>
+                    </label>
+                </div>
+
+                {/* Campos de parcela */}
+                {parcelado && (
+                    <div className="parcelas-fields">
+                        <div className="parcela-input">
+                            <label>Parcela atual</label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={parcelaAtual}
+                                onChange={e => setParcelaAtual(e.target.value)}
+                                placeholder="Ex: 1"
+                            />
+                        </div>
+                        <span className="parcela-de">de</span>
+                        <div className="parcela-input">
+                            <label>Total de parcelas</label>
+                            <input
+                                type="number"
+                                min="2"
+                                value={totalParcelas}
+                                onChange={e => setTotalParcelas(e.target.value)}
+                                placeholder="Ex: 12"
+                            />
+                        </div>
+                    </div>
+                )}
             </form>
 
             {response && (
-                <div className={`toast ${response.includes("Nao consegui") || response.includes("Erro") ? "toast-error" : "toast-success"}`}>
+                <div className={`toast ${response.includes("Nao consegui") || response.includes("Erro") || response.includes("mínimo") ? "toast-error" : "toast-success"}`}>
                     <span>{response}</span>
                     <button className="toast-close" onClick={() => setResponse("")}>x</button>
                 </div>

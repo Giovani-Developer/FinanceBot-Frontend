@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { getHistorico, deleteTransacao } from "../services/api"
+import { getHistorico, deleteTransacao, marcarComoPago } from "../services/api"
 
 export default function Historico({ user, refreshKey }) {
     const [historico, setHistorico] = useState(null)
@@ -8,10 +8,8 @@ export default function Historico({ user, refreshKey }) {
     const [filters, setFilters] = useState({ dataInicio: "", dataFim: "", categoria: "", tipo: "" })
     const filtersRef = useRef(filters)
 
-    // Keep ref in sync
     useEffect(() => { filtersRef.current = filters }, [filters])
 
-    // Fetch function that reads from ref, not closure
     const fetchData = useCallback((currentPage = 0, currentFilters = null) => {
         if (!user) return
         setLoading(true)
@@ -22,18 +20,9 @@ export default function Historico({ user, refreshKey }) {
             .finally(() => setLoading(false))
     }, [user])
 
-    // Initial load
     useEffect(() => { fetchData(0) }, [fetchData])
-
-    // Refresh on tab change or new transaction
-    useEffect(() => {
-        fetchData(0)
-    }, [refreshKey])
-
-    // Refresh when filters change
-    useEffect(() => {
-        fetchData(0)
-    }, [filters])
+    useEffect(() => { fetchData(0) }, [refreshKey])
+    useEffect(() => { fetchData(0) }, [filters])
 
     async function handleDelete(id) {
         if (!confirm("Deletar esta transacao?")) return
@@ -42,12 +31,14 @@ export default function Historico({ user, refreshKey }) {
         else alert(result.data)
     }
 
-    function handleFilterChange(key, value) {
-        setFilters(prev => ({ ...prev, [key]: value }))
+    async function handlePagar(id) {
+        const result = await marcarComoPago(id, user)
+        if (result.ok) fetchData(page)
+        else alert("Erro ao marcar como pago")
     }
 
-    function clearFilters() {
-        setFilters({ dataInicio: "", dataFim: "", categoria: "", tipo: "" })
+    function handleFilterChange(key, value) {
+        setFilters(prev => ({ ...prev, [key]: value }))
     }
 
     function formatDate(dateStr) {
@@ -57,31 +48,39 @@ export default function Historico({ user, refreshKey }) {
         })
     }
 
+    function renderParcela(item) {
+        if (!item.parcelado) return null
+        const valorRestante = item.valor * (item.totalParcelas - item.parcelaAtual)
+        const valorTotal = item.valor * item.totalParcelas
+        return (
+            <div className="parcela-info">
+                <span className={`badge-parcela ${item.pago ? "pago" : "pendente"}`}>
+                    {item.pago ? "✓ Pago" : "Pendente"}
+                </span>
+                <span className="parcela-detalhe">
+                    {item.parcelaAtual}/{item.totalParcelas} parcelas
+                </span>
+                <span className="parcela-valores">
+                    Total: R$ {valorTotal.toFixed(2)} | Falta: R$ {valorRestante.toFixed(2)}
+                </span>
+            </div>
+        )
+    }
+
     return (
         <div className="historico">
             <h2>Historico de Transacoes</h2>
 
             <div className="filtros">
-                <input
-                    type="date"
-                    value={filters.dataInicio}
-                    onChange={e => handleFilterChange("dataInicio", e.target.value)}
-                />
-                <input
-                    type="date"
-                    value={filters.dataFim}
-                    onChange={e => handleFilterChange("dataFim", e.target.value)}
-                />
-                <input
-                    type="text"
-                    value={filters.categoria}
+                <input type="date" value={filters.dataInicio}
+                    onChange={e => handleFilterChange("dataInicio", e.target.value)} />
+                <input type="date" value={filters.dataFim}
+                    onChange={e => handleFilterChange("dataFim", e.target.value)} />
+                <input type="text" value={filters.categoria}
                     onChange={e => handleFilterChange("categoria", e.target.value)}
-                    placeholder="Categoria"
-                />
-                <select
-                    value={filters.tipo}
-                    onChange={e => handleFilterChange("tipo", e.target.value)}
-                >
+                    placeholder="Categoria" />
+                <select value={filters.tipo}
+                    onChange={e => handleFilterChange("tipo", e.target.value)}>
                     <option value="">Todos</option>
                     <option value="gasto">Gastos</option>
                     <option value="receita">Receitas</option>
@@ -102,12 +101,13 @@ export default function Historico({ user, refreshKey }) {
                                     <th>Tipo</th>
                                     <th>Valor</th>
                                     <th>Categoria</th>
+                                    <th>Parcelas</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {historico.content.map(item => (
-                                    <tr key={item.id}>
+                                    <tr key={item.id} className={item.parcelado && !item.pago ? "row-pendente" : ""}>
                                         <td>{formatDate(item.createdAt)}</td>
                                         <td>
                                             <span className={`badge ${item.tipo === "gasto" ? "badge-gasto" : "badge-receita"}`}>
@@ -117,6 +117,14 @@ export default function Historico({ user, refreshKey }) {
                                         <td className="valor">R$ {item.valor.toFixed(2)}</td>
                                         <td>{item.categoria}</td>
                                         <td>
+                                            {item.parcelado ? renderParcela(item) : <span className="sem-parcela">—</span>}
+                                        </td>
+                                        <td className="acoes">
+                                            {item.parcelado && !item.pago && (
+                                                <button className="btn-pagar" onClick={() => handlePagar(item.id)} title="Marcar como pago">
+                                                    ✓
+                                                </button>
+                                            )}
                                             <button className="btn-delete" onClick={() => handleDelete(item.id)} title="Deletar">
                                                 x
                                             </button>

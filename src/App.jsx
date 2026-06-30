@@ -35,12 +35,15 @@ export default function App() {
                 {!loggedInUser ? (
                     <form onSubmit={handleLogin} className="login-form">
                         <input
-                            type="text"
-                            placeholder="Seu nome"
+                            type="password"
+                            placeholder="Digite seu PIN"
                             value={loginInput}
                             onChange={e => setLoginInput(e.target.value)}
+                            maxLength={6}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                         />
-                        <button type="submit">Entrar</button>
+                        <button type="submit">Entrar com PIN</button>
                     </form>
                 ) : (
                     <div className="user-bar">
