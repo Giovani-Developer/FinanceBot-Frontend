@@ -2,6 +2,7 @@ import { useState, useCallback } from "react"
 import FinanceForm from "./components/FinanceForm"
 import Dashboard from "./components/Dashboard"
 import Historico from "./components/Historico"
+import Parcelas from "./components/Parcelas"
 import "./App.css"
 
 export default function App() {
@@ -65,12 +66,16 @@ export default function App() {
                         <button className={activeTab === "historico" ? "active" : ""} onClick={() => setActiveTab("historico")}>
                             Historico
                         </button>
+                        <button className={activeTab === "parcelas" ? "active" : ""} onClick={() => setActiveTab("parcelas")}>
+                            Parcelas
+                        </button>
                     </nav>
 
                     <main className="app-main">
                         {activeTab === "dashboard" && <Dashboard user={loggedInUser} />}
                         {activeTab === "enviar" && <FinanceForm user={loggedInUser} onSuccess={handleRefresh} />}
                         {activeTab === "historico" && <Historico user={loggedInUser} refreshKey={refreshKey} />}
+                        {activeTab === "parcelas" && <Parcelas user={loggedInUser} />}
                     </main>
                 </>
             )}

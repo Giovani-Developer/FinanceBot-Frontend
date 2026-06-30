@@ -802,6 +802,129 @@ tbody tr:hover {
     align-items: center;
 }
 
+/* Parcelas page */
+.parcelas-page {
+    padding: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.parcelas-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.parcela-card {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #2a2a3e;
+}
+
+.parcela-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.parcela-categoria {
+    font-size: 1rem;
+    font-weight: 600;
+    display: block;
+    text-transform: capitalize;
+}
+
+.parcela-valor-mensal {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.parcela-progresso-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-bottom: 6px;
+}
+
+.parcela-progress-bar {
+    height: 6px;
+    background: #2a2a3e;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.parcela-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.parcela-valores-resumo {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.parcela-valor-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.parcela-label {
+    font-size: 0.7rem;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.parcela-num {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.parcela-num.pago {
+    color: #4ade80;
+}
+
+.parcela-num.restante {
+    color: #f87171;
+}
+
+.btn-proxima-parcela {
+    width: 100%;
+    padding: 10px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-proxima-parcela:hover {
+    background: #4f46e5;
+}
+
+.parcelas-resumo-total {
+    margin-top: 20px;
+    text-align: center;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.parcelas-resumo-total strong {
+    color: white;
+    font-size: 1rem;
+}
+
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }

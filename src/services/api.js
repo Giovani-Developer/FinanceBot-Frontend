@@ -61,3 +61,16 @@ export async function marcarComoPago(id, user) {
     })
     return { ok: response.ok, data: await response.text() }
 }
+
+export async function getParcelasAtivas(user) {
+    const response = await fetch(`${API_URL}/finance/parcelas-ativas/${user}`)
+    if (!response.ok) throw new Error("Erro ao buscar parcelas ativas")
+    return await response.json()
+}
+
+export async function pagarProximaParcela(id, user) {
+    const response = await fetch(`${API_URL}/finance/transacao/${id}/proxima-parcela?user=${user}`, {
+        method: "PATCH"
+    })
+    return { ok: response.ok, data: await response.text() }
+}
