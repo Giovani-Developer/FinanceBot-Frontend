@@ -1,4 +1,4 @@
-const API_URL = "https://financebot-rilz.onrender.com"
+const API_URL = "http://financebot-rilz.onrender.com"
 // const API_URL = "http://localhost:3000"
 
 
