@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { getHistorico, deleteTransacao, marcarComoPago } from "../services/api"
 
-export default function Historico({ user, refreshKey }) {
+export default function Historico({ refreshKey }) {
     const [historico, setHistorico] = useState(null)
     const [loading, setLoading] = useState(false)
     const [page, setPage] = useState(0)
@@ -11,14 +11,13 @@ export default function Historico({ user, refreshKey }) {
     useEffect(() => { filtersRef.current = filters }, [filters])
 
     const fetchData = useCallback((currentPage = 0, currentFilters = null) => {
-        if (!user) return
         setLoading(true)
         const f = currentFilters ?? filtersRef.current
-        getHistorico(user, { page: currentPage, ...f })
+        getHistorico({ page: currentPage, ...f })
             .then(setHistorico)
             .catch(() => setHistorico(null))
             .finally(() => setLoading(false))
-    }, [user])
+    }, [])
 
     useEffect(() => { fetchData(0) }, [fetchData])
     useEffect(() => { fetchData(0) }, [refreshKey])
@@ -26,13 +25,13 @@ export default function Historico({ user, refreshKey }) {
 
     async function handleDelete(id) {
         if (!confirm("Deletar esta transacao?")) return
-        const result = await deleteTransacao(id, user)
+        const result = await deleteTransacao(id)
         if (result.ok) fetchData(page)
         else alert(result.data)
     }
 
     async function handlePagar(id) {
-        const result = await marcarComoPago(id, user)
+        const result = await marcarComoPago(id)
         if (result.ok) fetchData(page)
         else alert("Erro ao marcar como pago")
     }
@@ -57,12 +56,8 @@ export default function Historico({ user, refreshKey }) {
                 <span className={`badge-parcela ${item.pago ? "pago" : "pendente"}`}>
                     {item.pago ? "✓ Pago" : "Pendente"}
                 </span>
-                <span className="parcela-detalhe">
-                    {item.parcelaAtual}/{item.totalParcelas} parcelas
-                </span>
-                <span className="parcela-valores">
-                    Total: R$ {valorTotal.toFixed(2)} | Falta: R$ {valorRestante.toFixed(2)}
-                </span>
+                <span className="parcela-detalhe">{item.parcelaAtual}/{item.totalParcelas} parcelas</span>
+                <span className="parcela-valores">Total: R$ {valorTotal.toFixed(2)} | Falta: R$ {valorRestante.toFixed(2)}</span>
             </div>
         )
     }
@@ -70,17 +65,11 @@ export default function Historico({ user, refreshKey }) {
     return (
         <div className="historico">
             <h2>Historico de Transacoes</h2>
-
             <div className="filtros">
-                <input type="date" value={filters.dataInicio}
-                    onChange={e => handleFilterChange("dataInicio", e.target.value)} />
-                <input type="date" value={filters.dataFim}
-                    onChange={e => handleFilterChange("dataFim", e.target.value)} />
-                <input type="text" value={filters.categoria}
-                    onChange={e => handleFilterChange("categoria", e.target.value)}
-                    placeholder="Categoria" />
-                <select value={filters.tipo}
-                    onChange={e => handleFilterChange("tipo", e.target.value)}>
+                <input type="date" value={filters.dataInicio} onChange={e => handleFilterChange("dataInicio", e.target.value)} />
+                <input type="date" value={filters.dataFim} onChange={e => handleFilterChange("dataFim", e.target.value)} />
+                <input type="text" value={filters.categoria} onChange={e => handleFilterChange("categoria", e.target.value)} placeholder="Categoria" />
+                <select value={filters.tipo} onChange={e => handleFilterChange("tipo", e.target.value)}>
                     <option value="">Todos</option>
                     <option value="gasto">Gastos</option>
                     <option value="receita">Receitas</option>
@@ -97,12 +86,7 @@ export default function Historico({ user, refreshKey }) {
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Data</th>
-                                    <th>Tipo</th>
-                                    <th>Valor</th>
-                                    <th>Categoria</th>
-                                    <th>Parcelas</th>
-                                    <th></th>
+                                    <th>Data</th><th>Tipo</th><th>Valor</th><th>Categoria</th><th>Parcelas</th><th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -116,34 +100,23 @@ export default function Historico({ user, refreshKey }) {
                                         </td>
                                         <td className="valor">R$ {item.valor.toFixed(2)}</td>
                                         <td>{item.categoria}</td>
-                                        <td>
-                                            {item.parcelado ? renderParcela(item) : <span className="sem-parcela">—</span>}
-                                        </td>
+                                        <td>{item.parcelado ? renderParcela(item) : <span className="sem-parcela">—</span>}</td>
                                         <td className="acoes">
                                             {item.parcelado && !item.pago && (
-                                                <button className="btn-pagar" onClick={() => handlePagar(item.id)} title="Marcar como pago">
-                                                    ✓
-                                                </button>
+                                                <button className="btn-pagar" onClick={() => handlePagar(item.id)}>✓</button>
                                             )}
-                                            <button className="btn-delete" onClick={() => handleDelete(item.id)} title="Deletar">
-                                                x
-                                            </button>
+                                            <button className="btn-delete" onClick={() => handleDelete(item.id)}>x</button>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
-
                     {historico.totalElements > 50 && (
                         <div className="paginacao">
-                            <button disabled={page === 0} onClick={() => { setPage(p => p - 1); fetchData(page - 1) }}>
-                                Anterior
-                            </button>
+                            <button disabled={page === 0} onClick={() => { setPage(p => p - 1); fetchData(page - 1) }}>Anterior</button>
                             <span>Pagina {historico.number + 1} de {historico.totalPages}</span>
-                            <button disabled={page >= historico.totalPages - 1} onClick={() => { setPage(p => p + 1); fetchData(page + 1) }}>
-                                Proxima
-                            </button>
+                            <button disabled={page >= historico.totalPages - 1} onClick={() => { setPage(p => p + 1); fetchData(page + 1) }}>Proxima</button>
                         </div>
                     )}
                 </>

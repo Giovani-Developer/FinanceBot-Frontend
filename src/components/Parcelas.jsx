@@ -1,24 +1,23 @@
 import { useState, useEffect, useCallback } from "react"
 import { getParcelasAtivas, pagarProximaParcela, deleteTransacao } from "../services/api"
 
-export default function Parcelas({ user }) {
+export default function Parcelas() {
     const [parcelas, setParcelas] = useState([])
     const [loading, setLoading] = useState(false)
     const [mensagem, setMensagem] = useState("")
 
     const fetchParcelas = useCallback(() => {
-        if (!user) return
         setLoading(true)
-        getParcelasAtivas(user)
+        getParcelasAtivas()
             .then(setParcelas)
             .catch(() => setParcelas([]))
             .finally(() => setLoading(false))
-    }, [user])
+    }, [])
 
     useEffect(() => { fetchParcelas() }, [fetchParcelas])
 
     async function handleProximaParcela(id) {
-        const result = await pagarProximaParcela(id, user)
+        const result = await pagarProximaParcela(id)
         setMensagem(result.data)
         fetchParcelas()
         setTimeout(() => setMensagem(""), 4000)
@@ -26,7 +25,7 @@ export default function Parcelas({ user }) {
 
     async function handleDelete(id) {
         if (!confirm("Deletar este parcelamento?")) return
-        const result = await deleteTransacao(id, user)
+        const result = await deleteTransacao(id)
         if (result.ok) fetchParcelas()
         else alert(result.data)
     }
@@ -44,14 +43,12 @@ export default function Parcelas({ user }) {
     return (
         <div className="parcelas-page">
             <h2>Parcelas Ativas</h2>
-
             {mensagem && (
                 <div className="toast toast-success">
                     <span>{mensagem}</span>
                     <button className="toast-close" onClick={() => setMensagem("")}>x</button>
                 </div>
             )}
-
             {parcelas.length === 0 ? (
                 <p className="empty-state">Nenhuma parcela ativa no momento.</p>
             ) : (
@@ -61,7 +58,6 @@ export default function Parcelas({ user }) {
                         const valorPago = item.valor * item.parcelaAtual
                         const valorRestante = item.valor * (item.totalParcelas - item.parcelaAtual)
                         const valorTotal = item.valor * item.totalParcelas
-
                         return (
                             <div key={item.id} className="parcela-card">
                                 <div className="parcela-card-header">
@@ -69,21 +65,15 @@ export default function Parcelas({ user }) {
                                         <span className="parcela-categoria">{item.categoria}</span>
                                         <span className="parcela-valor-mensal">R$ {item.valor.toFixed(2)}/mês</span>
                                     </div>
-                                    <button className="btn-delete" onClick={() => handleDelete(item.id)} title="Deletar">x</button>
+                                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>x</button>
                                 </div>
-
                                 <div className="parcela-progresso-info">
                                     <span>Parcela {item.parcelaAtual} de {item.totalParcelas}</span>
                                     <span>{progresso}%</span>
                                 </div>
-
                                 <div className="parcela-progress-bar">
-                                    <div
-                                        className="parcela-progress-fill"
-                                        style={{ width: `${progresso}%` }}
-                                    />
+                                    <div className="parcela-progress-fill" style={{ width: `${progresso}%` }} />
                                 </div>
-
                                 <div className="parcela-valores-resumo">
                                     <div className="parcela-valor-item">
                                         <span className="parcela-label">Total</span>
@@ -98,11 +88,7 @@ export default function Parcelas({ user }) {
                                         <span className="parcela-num restante">R$ {valorRestante.toFixed(2)}</span>
                                     </div>
                                 </div>
-
-                                <button
-                                    className="btn-proxima-parcela"
-                                    onClick={() => handleProximaParcela(item.id)}
-                                >
+                                <button className="btn-proxima-parcela" onClick={() => handleProximaParcela(item.id)}>
                                     ✓ Pagar parcela {item.parcelaAtual + 1}/{item.totalParcelas}
                                 </button>
                             </div>
@@ -110,7 +96,6 @@ export default function Parcelas({ user }) {
                     })}
                 </div>
             )}
-
             <div className="parcelas-resumo-total">
                 <span>Total em parcelas/mês: </span>
                 <strong>R$ {parcelas.reduce((acc, p) => acc + p.valor, 0).toFixed(2)}</strong>

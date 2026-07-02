@@ -1,22 +1,20 @@
 import { useState } from "react"
 import { sendMessage, getResumo } from "../services/api"
 
-export default function FinanceForm({ user, onSuccess }) {
+export default function FinanceForm({ onSuccess }) {
     const [message, setMessage] = useState("")
     const [response, setResponse] = useState("")
     const [loading, setLoading] = useState(false)
     const [showResumo, setShowResumo] = useState(false)
     const [resumoText, setResumoText] = useState("")
     const [resumoLoading, setResumoLoading] = useState(false)
-
-    // Parcelas
     const [parcelado, setParcelado] = useState(false)
     const [totalParcelas, setTotalParcelas] = useState("")
     const [parcelaAtual, setParcelaAtual] = useState("1")
 
     async function handleSubmit(e) {
         e.preventDefault()
-        if (!message.trim() || !user) return
+        if (!message.trim()) return
 
         if (parcelado && (!totalParcelas || parseInt(totalParcelas) < 2)) {
             setResponse("Informe o total de parcelas (mínimo 2)")
@@ -31,7 +29,7 @@ export default function FinanceForm({ user, onSuccess }) {
                 parcelaAtual: parseInt(parcelaAtual)
             } : null
 
-            const result = await sendMessage(message, user, parcelas)
+            const result = await sendMessage(message, parcelas)
             setResponse(result)
             setMessage("")
             setParcelado(false)
@@ -46,12 +44,11 @@ export default function FinanceForm({ user, onSuccess }) {
     }
 
     async function handleResumo() {
-        if (!user) return
         setResumoLoading(true)
         setShowResumo(true)
         setResumoText("")
         try {
-            const result = await getResumo(user)
+            const result = await getResumo()
             setResumoText(result)
         } catch {
             setResumoText("Erro ao carregar resumo")
@@ -101,7 +98,6 @@ export default function FinanceForm({ user, onSuccess }) {
                     </button>
                 </div>
 
-                {/* Toggle parcelas */}
                 <div className="parcelas-toggle">
                     <label className="toggle-label">
                         <input
@@ -113,7 +109,6 @@ export default function FinanceForm({ user, onSuccess }) {
                     </label>
                 </div>
 
-                {/* Campos de parcela */}
                 {parcelado && (
                     <div className="parcelas-fields">
                         <div className="parcela-input">
@@ -148,7 +143,7 @@ export default function FinanceForm({ user, onSuccess }) {
                 </div>
             )}
 
-            <button className="btn-resumo" onClick={handleResumo} disabled={!user}>
+            <button className="btn-resumo" onClick={handleResumo}>
                 Ver Resumo
             </button>
         </div>

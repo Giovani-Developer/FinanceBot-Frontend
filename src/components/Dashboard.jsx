@@ -10,7 +10,7 @@ const COLORS = [
     "#ef4444", "#8b5cf6", "#14b8a6", "#f97316", "#06b6d4"
 ]
 
-export default function Dashboard({ user }) {
+export default function Dashboard() {
     const [receitas, setReceitas] = useState(0)
     const [gastos, setGastos] = useState(0)
     const [saldo, setSaldo] = useState(0)
@@ -19,11 +19,10 @@ export default function Dashboard({ user }) {
     const [loading, setLoading] = useState(true)
 
     const fetchData = useCallback(() => {
-        if (!user) return
         setLoading(true)
         Promise.allSettled([
-            getHistorico(user, { page: 0, size: 500 }),
-            getCategoriaResumo(user, {})
+            getHistorico({ page: 0, size: 500 }),
+            getCategoriaResumo({})
         ]).then(([histResult, catResult]) => {
             const historico = histResult.status === "fulfilled" ? histResult.value : null
             const cats = catResult.status === "fulfilled" ? catResult.value : []
@@ -38,11 +37,10 @@ export default function Dashboard({ user }) {
             setSaldo(rec - gast)
             setTotalTransacoes(items.length)
         }).finally(() => setLoading(false))
-    }, [user])
+    }, [])
 
     useEffect(() => { fetchData() }, [fetchData])
 
-    // Pie chart data
     const pieData = {
         labels: categorias.map(c => c.categoria),
         datasets: [{
@@ -54,7 +52,6 @@ export default function Dashboard({ user }) {
         }]
     }
 
-    // Bar chart data (receitas vs gastos)
     const barData = {
         labels: ["Receitas", "Gastos"],
         datasets: [{
@@ -95,7 +92,6 @@ export default function Dashboard({ user }) {
 
     return (
         <div className="dashboard">
-            {/* Cards */}
             <div className="cards-row">
                 <div className="card card-receitas">
                     <div className="card-icon">⬆</div>
@@ -122,7 +118,6 @@ export default function Dashboard({ user }) {
                 </div>
             </div>
 
-            {/* Charts */}
             <div className="charts-row">
                 <div className="chart-box">
                     <h3>Receitas vs Gastos</h3>

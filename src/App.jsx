@@ -1,27 +1,54 @@
 import { useState, useCallback } from "react"
+import { GoogleLogin } from "@react-oauth/google"
 import FinanceForm from "./components/FinanceForm"
 import Dashboard from "./components/Dashboard"
 import Historico from "./components/Historico"
 import Parcelas from "./components/Parcelas"
+import { googleLogin } from "./services/api"
 import "./App.css"
 
 export default function App() {
-    const [loginInput, setLoginInput] = useState(sessionStorage.getItem("user") || "")
-    const [loggedInUser, setLoggedInUser] = useState(sessionStorage.getItem("user") || null)
+    const [user, setUser] = useState(() => {
+        const stored = localStorage.getItem("user")
+        return stored ? JSON.parse(stored) : null
+    })
     const [activeTab, setActiveTab] = useState("dashboard")
     const [refreshKey, setRefreshKey] = useState(0)
 
-    const handleLogin = (e) => {
-        e.preventDefault()
-        if (!loginInput.trim()) return
-        sessionStorage.setItem("user", loginInput)
-        setLoggedInUser(loginInput)
-    }
+const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+        console.log("Credential:", credentialResponse);
 
+        const data = await googleLogin(credentialResponse.credential);
+        console.log("Resposta do backend:", data);
+
+        localStorage.setItem("jwt", data.token);
+        localStorage.setItem("user", JSON.stringify({
+            email: data.email,
+            nome: data.nome,
+            foto: data.foto
+        }));
+
+        setUser({
+            email: data.email,
+            nome: data.nome,
+            foto: data.foto
+        });
+    } catch (error) {
+        console.error("Erro completo:", error);
+
+        if (error.response) {
+            console.log("Status:", error.response.status);
+            console.log("Dados:", error.response.data);
+        }
+
+        alert("Erro ao fazer login com Google");
+    }
+}
     const handleLogout = () => {
-        sessionStorage.removeItem("user")
-        setLoggedInUser(null)
-        setLoginInput("")
+        localStorage.removeItem("jwt")
+        localStorage.removeItem("user")
+        setUser(null)
         setActiveTab("dashboard")
     }
 
@@ -33,28 +60,26 @@ export default function App() {
         <div className="app">
             <header className="app-header">
                 <h1>FinanceBot</h1>
-                {!loggedInUser ? (
-                    <form onSubmit={handleLogin} className="login-form">
-                        <input
-                            type="text"
-                            placeholder="Digite seu Nome"
-                            value={loginInput}
-                            onChange={e => setLoginInput(e.target.value)}
-                            maxLength={20}
-                            inputMode="text"
-                            pattern="[a-zA-Z]*"
+                {!user ? (
+                    <div className="login-google">
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => alert("Erro ao fazer login")}
+                            text="signin_with"
+                            shape="rectangular"
+                            locale="pt-BR"
                         />
-                        <button type="submit">Entrar</button>
-                    </form>
+                    </div>
                 ) : (
                     <div className="user-bar">
-                        <span>Ola, <strong>{loggedInUser}</strong></span>
+                        {user.foto && <img src={user.foto} alt={user.nome} className="user-avatar" />}
+                        <span>Ola, <strong>{user.nome}</strong></span>
                         <button onClick={handleLogout}>Sair</button>
                     </div>
                 )}
             </header>
 
-            {loggedInUser && (
+            {user && (
                 <>
                     <nav className="tabs">
                         <button className={activeTab === "dashboard" ? "active" : ""} onClick={() => setActiveTab("dashboard")}>
@@ -72,10 +97,10 @@ export default function App() {
                     </nav>
 
                     <main className="app-main">
-                        {activeTab === "dashboard" && <Dashboard user={loggedInUser} />}
-                        {activeTab === "enviar" && <FinanceForm user={loggedInUser} onSuccess={handleRefresh} />}
-                        {activeTab === "historico" && <Historico user={loggedInUser} refreshKey={refreshKey} />}
-                        {activeTab === "parcelas" && <Parcelas user={loggedInUser} />}
+                        {activeTab === "dashboard" && <Dashboard />}
+                        {activeTab === "enviar" && <FinanceForm onSuccess={handleRefresh} />}
+                        {activeTab === "historico" && <Historico refreshKey={refreshKey} />}
+                        {activeTab === "parcelas" && <Parcelas />}
                     </main>
                 </>
             )}
