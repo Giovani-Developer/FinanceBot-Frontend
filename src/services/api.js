@@ -41,12 +41,22 @@ export async function sendMessage(message, parcelas = null) {
         body.totalParcelas = parcelas.totalParcelas
         body.parcelaAtual = parcelas.parcelaAtual
     }
-    const response = await fetch(`${API_URL}/finance/message`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify(body)
-    })
-    return await response.text()
+const response = await fetch(`${API_URL}/finance/message`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(body)
+})
+
+console.log("Status:", response.status);
+
+const text = await response.text();
+console.log("Resposta:", text);
+
+if (!response.ok) {
+    throw new Error(text);
+}
+
+return text;
 }
 
 export async function getResumo() {
